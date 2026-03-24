@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "tw:build": "tailwindcss -i tailwind.css -o assets/tailwind.css --content 'src/**/*.rs'",
+    "tw:watch": "tailwindcss -i tailwind.css -o assets/tailwind.css --content 'src/**/*.rs' --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2"
+  }
+}

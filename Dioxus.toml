@@ -1,0 +1,11 @@
+[application]
+name = "snap-tray-auth"
+
+[web.app]
+title = "SnapTray 2FA"
+
+[web.resource]
+style = ["assets/tailwind.css", "assets/main.css"]
+
+[web.resource.dev]
+script = []

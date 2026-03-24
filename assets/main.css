@@ -1,0 +1,321 @@
+/* SVG ring transition — not expressible as a Tailwind utility */
+.ring-arc {
+  transition: stroke-dashoffset 0.9s linear, stroke 0.4s;
+}
+
+
+:root {
+  --primary:        #FF6B35;
+  --primary-dark:   #e85520;
+  --secondary:      #FFC857;
+  --secondary-dark: #e8b030;
+  --accent:         #FFE5DC;
+  --gray:           #6C757D;
+  --gray-light:     #e9ecef;
+  --gray-xlight:    #f4f6f8;
+  --white:          #FFFFFF;
+  --dark:           #1f2937;
+  --text-muted:     #9ca3af;
+
+  --shadow-card: 0 32px 64px rgba(255, 107, 53, 0.13),
+                 0  8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-token: 0 8px 20px rgba(0, 0, 0, 0.15);
+  --shadow-btn:   0 4px 12px rgba(255, 107, 53, 0.35);
+
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 28px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { height: 100%; }
+
+body {
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Screen ──────────────────────────────────────────────── */
+.screen {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(255, 107, 53, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(255, 200, 87, 0.10) 0%, transparent 60%),
+    linear-gradient(160deg, var(--accent) 0%, #fff8f5 40%, var(--white) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+.card {
+  width: min(420px, 100%);
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-card);
+  padding: 32px 24px 24px;
+  /* subtle inner top border for depth */
+  border-top: 1px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+/* decorative brand streak behind content */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.app-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-align: center;
+  letter-spacing: -0.6px;
+  margin-bottom: 2px;
+  line-height: 1.1;
+}
+
+.app-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* ── Logo ────────────────────────────────────────────────── */
+.logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  /* subtle fade-in on load */
+  animation: fadeDown 0.4s var(--ease-out) both;
+}
+
+/* ── Token Row ───────────────────────────────────────────── */
+.token-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.token-card {
+  flex: 1;
+  height: 74px;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  box-shadow: var(--shadow-token);
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  /* inner shine */
+  isolation: isolate;
+}
+
+.token-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.18) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.token-card--primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.token-card--secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+  color: var(--dark);
+}
+
+/* ── Countdown ───────────────────────────────────────────── */
+.countdown-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 14px 0 10px;
+  border-top: 1px solid var(--gray-light);
+  border-bottom: 1px solid var(--gray-light);
+}
+
+.countdown-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+}
+
+/* ── Divider ─────────────────────────────────────────────── */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gray-light);
+}
+
+/* ── Input ───────────────────────────────────────────────── */
+.code-input {
+  display: block;
+  width: 100%;
+  padding: 15px 12px;
+  border: 2px solid var(--gray-light);
+  border-radius: var(--r-md);
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 10px;
+  color: var(--dark);
+  background: var(--gray-xlight);
+  outline: none;
+  transition: border-color 0.18s var(--ease-out),
+              background   0.18s var(--ease-out),
+              box-shadow   0.18s var(--ease-out);
+  margin-bottom: 14px;
+  caret-color: var(--primary);
+  /* mask placeholder spacing */
+  font-variant-numeric: tabular-nums;
+}
+
+.code-input::placeholder {
+  color: var(--gray-light);
+  letter-spacing: 6px;
+}
+
+.code-input:focus {
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.10);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.btn {
+  flex: 1;
+  padding: 14px 8px;
+  border: none;
+  border-radius: var(--r-md);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-out),
+              box-shadow 0.12s var(--ease-out),
+              filter     0.12s var(--ease-out);
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ripple-like shine on hover */
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.15) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.btn:hover  { filter: brightness(1.06); }
+.btn:active { transform: scale(0.96); filter: brightness(0.94); }
+
+.btn--primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  box-shadow: var(--shadow-btn);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.btn--secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+  color: var(--dark);
+  box-shadow: 0 4px 12px rgba(255, 200, 87, 0.35);
+}
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: var(--r-sm);
+  transition: opacity 0.2s, transform 0.2s var(--ease-out);
+  letter-spacing: 0.1px;
+}
+
+.toast--empty {
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+}
+
+.toast--success {
+  color: #166534;
+  background: linear-gradient(90deg, #dcfce7, #f0fdf4);
+  border: 1px solid #bbf7d0;
+}
+
+.toast--error {
+  color: #991b1b;
+  background: linear-gradient(90deg, #fee2e2, #fef2f2);
+  border: 1px solid #fecaca;
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
