@@ -1,9 +1,4 @@
 mod countdown;
-mod logo;
-mod toast;
-mod token_card;
+mod two_factor_auth;
 
-pub use countdown::CountdownRing;
-pub use logo::Logo;
-pub use toast::Toast;
-pub use token_card::TokenCard;
+pub use two_factor_auth::TwoFactorAuth;

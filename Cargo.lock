@@ -4481,7 +4481,9 @@ name = "snap-tray-auth"
 version = "0.1.0"
 dependencies = [
  "dioxus",
- "rand 0.8.5",
+ "getrandom 0.2.17",
+ "gloo-timers",
+ "tokio",
 ]
 
 [[package]]

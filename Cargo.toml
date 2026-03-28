@@ -8,7 +8,19 @@ edition = "2021"
 
 [dependencies]
 dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch = "main" }
-rand = "0.8"
+# getrandom must declare the "js" feature for wasm32-unknown-unknown targets.
+getrandom = { version = "0.2", features = ["js"] }
+
+# ── Platform-specific async timer ─────────────────────────────────────────────
+# gloo_timers wraps setTimeout via wasm_bindgen — wasm32 only.
+# On native Android / desktop Dioxus uses tokio; calling gloo_timers there
+# triggers SIGABRT because the wasm_bindgen FFI functions don't exist.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+gloo-timers = { version = "0.3", features = ["futures"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# tokio's time feature uses OS timers — safe on Android (aarch64/x86_64-linux-android).
+tokio = { version = "1", features = ["time"] }
 
 [features]
 default = ["web"]
