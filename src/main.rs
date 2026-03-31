@@ -1,8 +1,9 @@
 mod components;
+mod login_and_twofa;
 
-use components::TwoFactorAuth;
 use dioxus::prelude::*;
+use login_and_twofa::LoginAndTwoFa;
 
 fn main() {
-    dioxus::launch(TwoFactorAuth);
+    dioxus::launch(LoginAndTwoFa);
 }
