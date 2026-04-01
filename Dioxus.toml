@@ -9,3 +9,13 @@ style = ["assets/tailwind.css", "assets/main.css"]
 
 [web.resource.dev]
 script = []
+
+[android]
+package = "com.Bivorzk.snaptray" 
+min_sdk_version = 24
+version_name = "1.0.0"
+version_code = 1
+
+[android.permissions]
+INTERNET = true
+
