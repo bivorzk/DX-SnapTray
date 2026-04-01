@@ -11,9 +11,12 @@ pub fn LoginScreen(
     on_submit: EventHandler<FormEvent>,
     on_forgot: EventHandler<MouseEvent>,
 ) -> Element {
+    let login_css = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/main.css"));
+    let tailwind_css = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/tailwind.css"));
+
     rsx! {
-        document::Stylesheet { href: asset!("/assets/main.css") }
-        document::Stylesheet { href: asset!("/assets/tailwind.css") }
+        document::Style { "{login_css}" }
+        document::Style { "{tailwind_css}" }
 
         div { class: "min-h-screen bg-[#0f172a] flex items-center justify-center p-4",
             div { class: "bg-[#111827] rounded-lg p-8 w-full max-w-md shadow-xl",
