@@ -32,7 +32,10 @@ pub async fn authenticate_user(username: String, password: String) -> Result<Opt
 
     let client = CLIENT.get_or_try_init(|| async {
         dotenvy::dotenv().ok();
-        let uri = std::env::var("MONGODB_URI").map_err(|_| ServerFnError::new("MONGODB_URI environment variable not set"))?;
+        let uri = match std::env::var("MONGODB_URI") {
+            Ok(u) => u,
+            Err(_) => return Err(mongodb::error::Error::custom("MONGODB_URI environment variable not set")),
+        };
         Client::with_uri_str(&uri).await
     }).await.map_err(|e| ServerFnError::new(e.to_string()))?;
 
