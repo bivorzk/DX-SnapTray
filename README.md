@@ -21,14 +21,6 @@ This repository contains the SnapTray cafeteria ordering app with a focus on **t
 
 ### Setup `.env`
 
-Create a `.env` file in project root with the following **required** values:
-
-```env
-MONGODB_URI="mongodb+srv://your-user:your-password@cluster0.kkpdosb.mongodb.net/your-db?retryWrites=true&w=majority"
-DB_NAME="snaptray"
-USERS_COLLECTION="users"
-PORT=8080
-```
 
 **Security note**: `MONGODB_URI` must include your MongoDB credentials. Never commit `.env` to Git—add it to `.gitignore`.
 
