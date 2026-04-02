@@ -5,4 +5,5 @@ PUBLIC_DST="target/release/public"
 if [ ! -d "$PUBLIC_DST" ]; then
     cp -r "$PUBLIC_SRC" "$PUBLIC_DST"
 fi
+export IP=0.0.0.0
 exec ./target/release/snap-tray-auth
