@@ -1,115 +1,61 @@
-// MongoDB database module — desktop / mobile (non-wasm) only.
-// Requires MONGODB_URI and MONGODB_DB environment variables (or a .env file).
-
-use mongodb::{bson::{doc, DateTime, Document}, Client, Collection};
+use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-use tokio::sync::OnceCell;
 
-static CLIENT: OnceCell<Client> = OnceCell::const_new();
-
-// ---------------------------------------------------------------------------
-// User model — adjust fields to match your collection schema
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct User {
-    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
-    pub id: Option<mongodb::bson::oid::ObjectId>,
     pub username: String,
-    /// bcrypt hash — field is named `password` in MongoDB
-    pub password: String,
     pub email: String,
-    #[serde(rename = "isVerified", default)]
-    pub is_verified: bool,
-    #[serde(rename = "usertype")]
-    pub user_type: String,
-    pub balance: f64,
-    #[serde(rename = "isBanned", default)]
-    pub is_banned: bool,
-    /// Nested identity object (contents vary — kept as raw BSON)
-    pub identity: Option<Document>,
-    /// Nested encryption object
-    pub encryption: Option<Document>,
-    /// Whether 2FA is active for this user
     #[serde(rename = "is2Active", default)]
     pub is_2active: bool,
-    #[serde(rename = "createdAt")]
-    pub created_at: Option<DateTime>,
-    #[serde(rename = "lastActive")]
-    pub last_active: Option<DateTime>,
-    #[serde(rename = "userPersonalInfo", default)]
-    pub user_personal_info: Vec<Document>,
-    #[serde(default)]
-    pub devices: Vec<Document>,
-    /// Mongoose internal version key
-    #[serde(rename = "__v", default)]
-    pub version: i32,
 }
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-async fn get_client() -> Result<&'static Client, String> {
-    CLIENT
-        .get_or_try_init(|| async {
-            let uri = std::env::var("MONGODB_URI")
-                .map_err(|_| "MONGODB_URI environment variable not set".to_string())?;
-            Client::with_uri_str(&uri)
-                .await
-                .map_err(|e| e.to_string())
-        })
-        .await
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum AuthResult {
+    User(User),
+    Requires2FA { email: String },
 }
 
-async fn collection() -> Result<Collection<User>, String> {
-    let client = get_client().await?;
-    let db_name = std::env::var("MONGODB_DB").unwrap_or_else(|_| "Projekt_vizsgaremek".to_string());
-    Ok(client.database(&db_name).collection::<User>("users"))
-}
-
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
-
-/// Look up a user by username (does **not** check the password).
-pub async fn get_user_by_username(username: &str) -> Result<Option<User>, String> {
-    let col = collection().await?;
-    col.find_one(doc! { "username": username })
-        .await
-        .map_err(|e| e.to_string())
-}
-
-/// Verify credentials using only username + password.
-/// Returns the full `User` on success, `None` on bad credentials.
-pub async fn authenticate_user(username: &str, password: &str) -> Result<Option<User>, String> {
-    #[derive(Deserialize)]
-    struct LoginProjection {
-        password: String,
-    }
-
+/// Server function: runs on the server, clients call it via HTTP automatically.
+/// MongoDB, bcrypt, dotenvy are only compiled when the "server" feature is active.
+#[server]
+pub async fn authenticate_user(username: String, password: String) -> Result<Option<AuthResult>, ServerFnError> {
+    use mongodb::{bson::doc, Client};
     use mongodb::options::FindOneOptions;
+    use tokio::sync::OnceCell;
 
-    let client = get_client().await?;
+    static CLIENT: OnceCell<Client> = OnceCell::const_new();
+
+    #[derive(serde::Deserialize)]
+    struct LoginProjection { password: String }
+    #[derive(serde::Deserialize)]
+    struct EmailProjection { email: String, #[serde(rename = "is2Active", default)] is_2active: bool }
+
+    let client = CLIENT.get_or_try_init(|| async {
+        dotenvy::dotenv().ok();
+        let uri = std::env::var("MONGODB_URI").map_err(|_| ServerFnError::new("MONGODB_URI environment variable not set"))?;
+        Client::with_uri_str(&uri).await
+    }).await.map_err(|e| ServerFnError::new(e.to_string()))?;
+
     let db_name = std::env::var("MONGODB_DB").unwrap_or_else(|_| "Projekt_vizsgaremek".to_string());
-    let col = client
-        .database(&db_name)
-        .collection::<LoginProjection>("users");
-
-    let opts = FindOneOptions::builder()
-        .projection(doc! { "password": 1 })
-        .build();
+    let col = client.database(&db_name).collection::<LoginProjection>("users");
 
     let result = col
-        .find_one(doc! { "username": username })
-        .with_options(opts)
+        .find_one(doc! { "username": &username })
+        .with_options(FindOneOptions::builder().projection(doc! { "password": 1 }).build())
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| ServerFnError::new(e.to_string()))?;
 
     match result {
-        Some(proj) if bcrypt::verify(password, &proj.password).unwrap_or(false) => {
-            // Password matched — now fetch the full user
-            get_user_by_username(username).await
+        Some(proj) if bcrypt::verify(&password, &proj.password).unwrap_or(false) => {
+            let col2 = client.database(&db_name).collection::<EmailProjection>("users");
+            let info = col2.find_one(doc! { "username": &username }).await
+                .map_err(|e| ServerFnError::new(e.to_string()))?
+                .ok_or_else(|| ServerFnError::new("User not found"))?;
+            if info.is_2active {
+                Ok(Some(AuthResult::Requires2FA { email: info.email }))
+            } else {
+                Ok(Some(AuthResult::User(User { username, email: info.email, is_2active: false })))
+            }
         }
         _ => Ok(None),
     }
@@ -118,7 +64,7 @@ pub async fn authenticate_user(username: &str, password: &str) -> Result<Option<
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mongodb::{Client, bson::Document};
+    use mongodb::{Client, bson::doc, bson::Document};
     use futures::TryStreamExt;
 
     async fn make_client() -> Client {
@@ -131,7 +77,6 @@ mod tests {
         std::env::var("MONGODB_DB").unwrap_or_else(|_| "Projekt_vizsgaremek".to_string())
     }
 
-    /// Lists all collections and all documents in every collection.
     #[tokio::test]
     async fn test_list_all() {
         let client = make_client().await;

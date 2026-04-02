@@ -22,10 +22,15 @@ pub fn LoginAndTwoFa() -> Element {
             let uname = username.read().clone();
             let pass = password.read().clone();
 
-            #[cfg(not(target_arch = "wasm32"))]
-            match crate::db::authenticate_user(&uname, &pass).await {
-                Ok(Some(user)) => {
+            match snap_tray_auth::db::authenticate_user(uname, pass).await {
+                Ok(Some(snap_tray_auth::db::AuthResult::User(user))) => {
                     *user_email.write() = user.email.clone();
+                    *login_message.write() =
+                        Some("Login successful!".to_string());
+                    *authenticated.write() = true;
+                }
+                Ok(Some(snap_tray_auth::db::AuthResult::Requires2FA { email })) => {
+                    *user_email.write() = email;
                     *login_message.write() =
                         Some("Login successful! Redirecting to 2FA...".to_string());
                     *authenticated.write() = true;
@@ -35,17 +40,8 @@ pub fn LoginAndTwoFa() -> Element {
                         Some("Invalid username or password.".to_string());
                 }
                 Err(e) => {
-                    *login_message.write() = Some(format!("Database error: {e}"));
+                    *login_message.write() = Some(format!("Login error: {e}"));
                 }
-            }
-
-            #[cfg(target_arch = "wasm32")]
-            {
-                // Web: replace with a server-function call when available
-                TimeoutFuture::new(1000).await;
-                *login_message.write() =
-                    Some("Login successful! Redirecting to 2FA...".to_string());
-                *authenticated.write() = true;
             }
 
             *loading.write() = false;

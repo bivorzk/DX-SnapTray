@@ -12,12 +12,24 @@
 
 use dioxus::prelude::*;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub mod api;
 pub mod model;
 pub mod view;
 
+#[cfg(not(target_arch = "wasm32"))]
 use api::{api_approve, api_start_2fa};
 use model::{generate_choices, Status};
+
+// Stubs for wasm32 so the component compiles on all platforms.
+#[cfg(target_arch = "wasm32")]
+async fn api_start_2fa(_email: &str) -> Result<model::TwoFaInitResponse, String> {
+    Err("2FA not supported on web client".into())
+}
+#[cfg(target_arch = "wasm32")]
+async fn api_approve(_token: &str) -> Result<(), String> {
+    Err("2FA not supported on web client".into())
+}
 use view::number_grid;
 
 

@@ -22,7 +22,7 @@ pub async fn api_start_2fa(email: &str) -> Result<TwoFaInitResponse, String> {
         .form(&[("email", email)])
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: reqwest::Error| e.to_string())?;
 
     match resp.status().as_u16() {
         200..=299 => {}
@@ -43,7 +43,7 @@ pub async fn api_start_2fa(email: &str) -> Result<TwoFaInitResponse, String> {
         _ => return Err(format!("Server error ({})", resp.status().as_u16())),
     }
 
-    let raw = resp.text().await.map_err(|e| e.to_string())?;
+    let raw = resp.text().await.map_err(|e: reqwest::Error| e.to_string())?;
     serde_json::from_str::<TwoFaInitResponse>(&raw)
         .map_err(|e| format!("Parse error: {e} — body: {raw}"))
 }
@@ -59,7 +59,7 @@ pub async fn api_poll_status(token: &str) -> Result<Option<String>, String> {
         .bearer_auth(token)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: reqwest::Error| e.to_string())?;
 
     if resp.status() == 401 {
         return Err("expired".into());
@@ -71,7 +71,7 @@ pub async fn api_poll_status(token: &str) -> Result<Option<String>, String> {
         return Err(resp.text().await.unwrap_or_else(|_| "Server error".into()));
     }
 
-    let body: TwoFaStatusResponse = resp.json().await.map_err(|e| e.to_string())?;
+    let body: TwoFaStatusResponse = resp.json().await.map_err(|e: reqwest::Error| e.to_string())?;
 
     if body.expired == Some(true) {
         return Err("expired".into());
@@ -92,7 +92,7 @@ pub async fn api_approve(token: &str) -> Result<(), String> {
         .bearer_auth(token)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: reqwest::Error| e.to_string())?;
 
     if !resp.status().is_success() {
         return Err(resp.text().await.unwrap_or_else(|_| "Approval failed".into()));
@@ -111,7 +111,7 @@ pub async fn api_verify(token: &str, code: u32) -> Result<bool, String> {
         .form(&[("token", token), ("code", &code.to_string())])
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: reqwest::Error| e.to_string())?;
 
     if resp.status() == 401 {
         return Ok(false); // wrong code or expired
@@ -134,7 +134,7 @@ pub async fn api_get_code(token: &str) -> Result<u32, String> {
         .bearer_auth(token)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: reqwest::Error| e.to_string())?;
 
     if resp.status() == 404 {
         return Err("No pending 2FA code.".into());
@@ -146,5 +146,5 @@ pub async fn api_get_code(token: &str) -> Result<u32, String> {
     resp.json::<CodeResp>()
         .await
         .map(|r| r.code)
-        .map_err(|e| e.to_string())
+        .map_err(|e: reqwest::Error| e.to_string())
 }

@@ -1,8 +1,8 @@
 ﻿use serde::Deserialize;
 
-#[cfg(debug_assertions)]
+#[cfg(all(debug_assertions, not(target_os = "android")))]
 pub const API_BASE: &str = "http://localhost:3000";
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), target_os = "android"))]
 pub const API_BASE: &str = "https://snaptray.onrender.com";
 
 // ---------------------------------------------------------------------------
