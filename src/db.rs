@@ -17,7 +17,7 @@ pub enum AuthResult {
 
 /// Server function: runs on the server, clients call it via HTTP automatically.
 /// MongoDB, bcrypt, dotenvy are only compiled when the "server" feature is active.
-#[server]
+#[server(endpoint = "/api/authenticate_user")]
 pub async fn authenticate_user(username: String, password: String) -> Result<Option<AuthResult>, ServerFnError> {
     use mongodb::{bson::doc, Client};
     use mongodb::options::FindOneOptions;
